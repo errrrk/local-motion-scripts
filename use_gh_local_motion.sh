@@ -26,14 +26,16 @@ function git {
     if [[ ${modified_clone_url} != $@ ]]; then
         echo "\\033[38;5;040mℹ\\033[0m ${script_name}: Modified clone URL to ${modified_clone_url}"
     fi
-    command git clone "${modified_clone_url}"
-  elif [[ "$1" == "remote" && "$@" != *"--help"* ]]; then
-    shift 1
-    local modified_remote_url=$(echo "$@" | sed "s/git@github.com/&${GH_SSH_KEY_SUFFIX}/")
-    if [[ ${modified_remote_url} != $@ ]]; then
-        echo "\\033[38;5;040mℹ\\033[0m ${script_name}: Modified remote URL to ${modified_remote_url}"
+    command git clone ${modified_clone_url}
+  elif [[ "$1" == "remote" && "$2" == "add" && "$@" != *"--help"* ]]; then
+    local repo_alias=$3
+    shift 3
+    local modified_remote=$(echo "$@" | sed "s/git@github.com/&${GH_SSH_KEY_SUFFIX}/")
+    if [[ ${modified_remote} != $@ ]]; then
+        echo "\\033[38;5;040mℹ\\033[0m ${script_name}: Modified remote URL to ${modified_remote}"
     fi
-    command git remote "$@"
+    echo "git remote add ${repo_alias} ${modified_remote}"
+    command git remote add ${repo_alias} ${modified_remote}
   else
     command git "$@"
   fi
