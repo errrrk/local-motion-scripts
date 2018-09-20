@@ -61,7 +61,7 @@ gh::_copy_to_clipboard() {
 
 gh::_append_to_zshrc() {
     local rc_file=$HOME/.zshrc
-    local source_script=${script_dir}/gh_local_motion.sh
+    local source_script=${script_dir}/use_gh_local_motion.sh
     if [[ -f ${rc_file} ]]; then
         if grep -q "source ${source_script}" ${rc_file}; then
             info "${rc_file} already sources ${source_script}"
@@ -101,41 +101,6 @@ gh::setup_local_motion_ssh_key() {
     info "Go to https://github.com/settings/ssh/new and paste it in there"
     echo ""
 }
-gh::setup_git_for_work_on_localmotion() {
-	GIT_AUTHOR_NAME=${author}
-	GIT_COMMITTER_NAME="${author}"
-	git config --global user.name "${author}"
-	GIT_AUTHOR_EMAIL="${private_email}"
-	GIT_COMMITTER_EMAIL="${private_email}"
-	git config --global user.email "${private_email}"
-	GH_SSH_KEY_SUFFIX="-local-motion"
-
-	git config --global alias.cl
-}
-# Proxy any call to git executable. In case of clone, apply '-local-motion' infix.
-function git {
-  if [[ "$1" == "clone" && "$@" != *"--help"* ]]; then
-    shift 1
-    local modified_clone_url=$(echo "$@" | sed "s/git@github.com/&${GH_SSH_KEY_SUFFIX}/")
-    if [[ ${modified_clone_url} != $@ ]]; then
-        warn "${script_name}: Modified clone URL to ${modified_clone_url}"
-    fi
-    command git clone "${modified_clone_url}"
-  elif [[ "$1" == "remote" && "$@" != *"--help"* ]]; then
-    shift 1
-    local modified_remote_url=$(echo "$@" | sed "s/git@github.com/&${GH_SSH_KEY_SUFFIX}/")
-    if [[ ${modified_remote_url} != $@ ]]; then
-        warn "${script_name}: Modified remote URL to ${modified_remote_url}"
-    fi
-    command git remote "$@"
-  else
-    command git "$@"
-  fi
-}
 
 # default to Local Motion project
-if [[ "$1" == "setup" ]]; then
-    gh::setup_local_motion_ssh_key
-else
-    gh::setup_git_for_work_on_localmotion
-fi
+gh::setup_local_motion_ssh_key
