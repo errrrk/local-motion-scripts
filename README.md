@@ -3,6 +3,7 @@
 We're working on a project called (Local Motion)[https://github.com/local-motion]. This repository
 contains scripts that are useful when setting up my local environment for that project.
 
+### gh_local_motion.sh
 You can run the initial setup. It'll show you the changes that will be made, and ask for 
 confirmation.
 ```bash
