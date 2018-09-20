@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 script_name=$(basename -- $0)
+private_email="43416374+errrrk@users.noreply.github.com"
+author="Errrrk"
 
 ruby::install() {
     if test ! $(which rbenv); then
@@ -30,7 +32,7 @@ ruby::install() {
 gh::generate_local_motion_ssh_key() {
 	ruby::install poet
 	mkdir -p ~/.ssh/local-motion
-	ssh-keygen -t rsa -C "erik.wiersma@nl.abnamro.com" -f "~/.ssh/local-motion/id_rsa_local_motion"
+	ssh-keygen -t rsa -C "${private_email}" -f "$HOME/.ssh/local-motion/id_rsa_local_motion"
 
 	cat << EOF > $HOME/.ssh/config.d/github.com-local-motion
 Host github.com-local-motion
@@ -39,15 +41,19 @@ Host github.com-local-motion
    IdentitiesOnly          yes
    IdentityFile ~/.ssh/local-motion/id_rsa_local_motion
 EOF
+    cat $HOME/.ssh/local-motion/id_rsa_local_motion.pub | pbcopy
+    echo "The public key has been pasted to your clipboard."
+    echo "Go to https://github.com/settings/ssh/new and paste it in there"
 }
-gh::localmotion() {
-	GIT_AUTHOR_NAME="Errrrk"
-	GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
-	git config --global user.name "$GIT_AUTHOR_NAME"
-	GIT_AUTHOR_EMAIL="erik.wiersma@nl.abnamro.com"
-	GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
-	git config --global user.email "$GIT_AUTHOR_EMAIL"
+gh::setup_git_for_work_on_localmotion() {
+	GIT_AUTHOR_NAME=${author}
+	GIT_COMMITTER_NAME="${author}"
+	git config --global user.name "${author}"
+	GIT_AUTHOR_EMAIL="${private_email}"
+	GIT_COMMITTER_EMAIL="${private_email}"
+	git config --global user.email "${private_email}"
 	GH_SSH_KEY_SUFFIX="-local-motion"
+
 	git config --global alias.cl
 }
 # Proxy any call to git executable. In case of clone, apply '-local-motion' infix.
@@ -70,6 +76,10 @@ function git {
     command git "$@"
   fi
 }
-# default to Local Motion project
-ghlocalmotion
 
+# default to Local Motion project
+if [[ "$1" == "generate" ]]; then
+    gh::generate_local_motion_ssh_key
+fi
+
+gh::setup_git_for_work_on_localmotion
