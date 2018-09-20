@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
-SCRIPTPATH=$(dirname "$0")
-source ${SCRIPTPATH}/_utils.sh
-source ${SCRIPTPATH}/_ask.sh
-
-script_name=$(basename -- $0)
+# This is my personal private email. You probably want to have your own configuration here.
 private_email="43416374+errrrk@users.noreply.github.com"
 author="Errrrk"
+
+
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+script_path=$(dirname "$0")
+script_name=$(basename -- $0)
+
+source ${script_path}/_utils.sh
+source ${script_path}/_ask.sh
 
 ruby::install() {
     if test ! $(which rbenv); then
@@ -38,7 +42,7 @@ gh::_generate_ssh_file() {
 	local email="$3"
 
 	mkdir -p ${target_directory}
-	ssh-keygen -t rsa -C "${email}" -f "${target_directory}/${private_key_name}"
+	ssh-keygen -t rsa -C "${email}" -f "${target_directory}/${private_key_name}" -N ''
 
 	cat << EOF > $HOME/.ssh/config.d/github.com-local-motion
 Host github.com-local-motion
@@ -50,8 +54,26 @@ EOF
     debug "Generated SSH config at $HOME/.ssh/config.d/github.com-local-motion"
 }
 
+gh::_copy_to_clipboard() {
+    local file_to_copy=$1
+    cat ${file_to_copy} | pbcopy
+}
+
+gh::_append_to_zshrc() {
+    local rc_file=$HOME/.zshrc
+    local source_script=${script_dir}/gh_local_motion.sh
+    if [[ -f ${rc_file} ]]; then
+        if grep -q "source ${source_script}" ${rc_file}; then
+            info "${rc_file} already sources ${source_script}"
+        else
+            echo "source ${source_script}" >> ${rc_file}
+            info "Updated ${rc_file} with 'source ${source_script}'"
+        fi
+    fi
+}
+
 # From https://medium.freecodecamp.org/manage-multiple-github-accounts-the-ssh-way-2dadc30ccaca
-gh::generate_local_motion_ssh_key() {
+gh::setup_local_motion_ssh_key() {
 	local target_directory="$HOME/.ssh/local-motion"
 	local private_key_name="id_rsa_local_motion"
 	local public_key_name="${private_key_name}.pub"
@@ -65,13 +87,14 @@ gh::generate_local_motion_ssh_key() {
     echo "     See https://github.com/awendt/poet for more information."
     echo "  3) Generate a new key-pair at ${target_directory}/${private_key_name}[.pub]"
     echo "  4) Add a new Local Motion specific SSH config file at $HOME/.ssh/config.d/github.com-local-motion"
+    echo "  5) Append this script to .bashrc and/or .zshrc"
     echo "  "
     ask "Please confirm that the above is OK with you " Y || exit 1
 
 	ruby::install poet
     gh::_generate_ssh_file ${target_directory} ${private_key_name} ${private_email}
-
-    cat ${target_directory}/${public_key_name} | pbcopy
+    gh::_append_to_zshrc
+    gh::_copy_to_clipboard ${target_directory}/${public_key_name}
 
     echo ""
     info "The public key has been pasted to your clipboard."
@@ -111,8 +134,8 @@ function git {
 }
 
 # default to Local Motion project
-if [[ "$1" == "generate" ]]; then
-    gh::generate_local_motion_ssh_key
+if [[ "$1" == "setup" ]]; then
+    gh::setup_local_motion_ssh_key
 else
     gh::setup_git_for_work_on_localmotion
 fi
