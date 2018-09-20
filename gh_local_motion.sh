@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-source _utils.sh
-source _ask.sh
+SCRIPTPATH=$(dirname "$0")
+source ${SCRIPTPATH}/_utils.sh
+source ${SCRIPTPATH}/_ask.sh
 
 script_name=$(basename -- $0)
 private_email="43416374+errrrk@users.noreply.github.com"
